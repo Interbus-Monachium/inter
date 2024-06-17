@@ -1,88 +1,58 @@
 document.addEventListener('DOMContentLoaded', function() {
   var calendarEl = document.getElementById('calendar');
+
   var calendar = new FullCalendar.Calendar(calendarEl, {
     initialView: 'dayGridMonth',
     locale: 'pl',
+    headerToolbar: {
+      left: 'prev,next today',
+      center: 'title',
+      right: 'dayGridMonth,timeGridWeek,timeGridDay'
+    },
+    events: [
+      // Tutaj możesz dodać zdarzenia kalendarza, jeśli potrzebujesz
+    ],
     dateClick: function(info) {
-      document.getElementById('selectedDate').value = info.dateStr;
-      document.getElementById('passengerListDate').textContent = info.dateStr;
+      var selectedDate = moment(info.date).format('YYYY-MM-DD');
+      document.getElementById('selectedDate').value = selectedDate;
+      document.getElementById('passengerListDate').innerText = selectedDate;
+      document.getElementById('calendarSection').style.display = 'none';
       document.getElementById('formSection').style.display = 'block';
-      document.getElementById('passengerListSection').style.display = 'block';
-      loadPassengers(info.dateStr);
     }
   });
+
   calendar.render();
 
-  document.getElementById('passengerForm').addEventListener('submit', function(event) {
+  // Obsługa formularza dodawania pasażera
+  var form = document.getElementById('passengerForm');
+  form.addEventListener('submit', function(event) {
     event.preventDefault();
-    addPassenger();
+    var route = form.route.value;
+    var firstName = form.firstName.value;
+    var lastName = form.lastName.value;
+    var phoneNumber = form.phoneNumber.value;
+    var departure = form.departure.value;
+    var destination = form.destination.value;
+    var price = form.price.value;
+    var notes = form.notes.value;
+
+    // Tutaj dodaj logikę dodawania pasażera do odpowiedniej listy (pl-de-list lub de-pl-list)
+
+    // Przykładowa operacja dodawania do listy
+    var passengerInfo = `${firstName} ${lastName} - Tel: ${phoneNumber}, Trasa: ${route}, Cena: ${price}`;
+    var passengerItem = document.createElement('li');
+    passengerItem.textContent = passengerInfo;
+
+    if (route === 'Polska-Niemcy') {
+      document.getElementById('pl-de-list').appendChild(passengerItem);
+    } else if (route === 'Niemcy-Polska') {
+      document.getElementById('de-pl-list').appendChild(passengerItem);
+    }
+
+    // Czyść formularz
+    form.reset();
+    document.getElementById('calendarSection').style.display = 'block';
+    document.getElementById('formSection').style.display = 'none';
   });
-
-  function addPassenger() {
-    var date = document.getElementById('selectedDate').value;
-    var route = document.getElementById('route').value;
-    var firstName = document.getElementById('firstName').value;
-    var lastName = document.getElementById('lastName').value;
-    var phoneNumber = document.getElementById('phoneNumber').value;
-    var departure = document.getElementById('departure').value;
-    var destination = document.getElementById('destination').value;
-    var price = document.getElementById('price').value;
-    var notes = document.getElementById('notes').value;
-
-    var passenger = {
-      firstName,
-      lastName,
-      phoneNumber,
-      departure,
-      destination,
-      price,
-      notes
-    };
-
-    var passengers = JSON.parse(localStorage.getItem(date)) || { 'Polska-Niemcy': [], 'Niemcy-Polska': [] };
-    passengers[route].push(passenger);
-    localStorage.setItem(date, JSON.stringify(passengers));
-    loadPassengers(date);
-    document.getElementById('passengerForm').reset();
-  }
-
-  function loadPassengers(date) {
-    var passengers = JSON.parse(localStorage.getItem(date)) || { 'Polska-Niemcy': [], 'Niemcy-Polska': [] };
-    var plDeList = document.getElementById('pl-de-list');
-    var dePlList = document.getElementById('de-pl-list');
-
-    plDeList.innerHTML = '';
-    dePlList.innerHTML = '';
-
-    passengers['Polska-Niemcy'].forEach((passenger, index) => {
-      var li = document.createElement('li');
-      li.innerHTML = `<strong>${passenger.firstName} ${passenger.lastName}</strong><br>
-                      Telefon: ${passenger.phoneNumber}<br>
-                      Wyjazd: ${passenger.departure}<br>
-                      Dojazd: ${passenger.destination}<br>
-                      Cena: ${passenger.price}<br>
-                      Uwagi: ${passenger.notes}
-                      <button onclick="removePassenger('${date}', 'Polska-Niemcy', ${index})">Usuń</button>`;
-      plDeList.appendChild(li);
-    });
-
-    passengers['Niemcy-Polska'].forEach((passenger, index) => {
-      var li = document.createElement('li');
-      li.innerHTML = `<strong>${passenger.firstName} ${passenger.lastName}</strong><br>
-                      Telefon: ${passenger.phoneNumber}<br>
-                      Wyjazd: ${passenger.departure}<br>
-                      Dojazd: ${passenger.destination}<br>
-                      Cena: ${passenger.price}<br>
-                      Uwagi: ${passenger.notes}
-                      <button onclick="removePassenger('${date}', 'Niemcy-Polska', ${index})">Usuń</button>`;
-      dePlList.appendChild(li);
-    });
-  }
-
-  window.removePassenger = function(date, route, index) {
-    var passengers = JSON.parse(localStorage.getItem(date));
-    passengers[route].splice(index, 1);
-    localStorage.setItem(date, JSON.stringify(passengers));
-    loadPassengers(date);
-  }
 });
+
